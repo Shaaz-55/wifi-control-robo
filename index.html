@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Voice Robot Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: url('background.jpg'); 
+      background-repeat: no-repeat; 
+      background-size: cover; 
+      background-attachment: fixed; 
+    }
+
+    .card {
+      background: rgba(0,0,0,0.75);
+      padding: 40px 30px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    h1 { color: #FFD700; margin-bottom: 10px; }
+    p { color: #f0f0f0; }
+
+    button {
+      background: #FFD700;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #000;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #FFC300;
+      transform: scale(1.05);
+    }
+
+    #text {
+      margin-top: 20px;
+      font-size: 22px;
+      color: #00FFCC;
+      min-height: 30px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>🎤 Voice Robot Control</h1>
+    <p>Say: Forward, Backward, Left, Right, Stop, Auto, Manual, A1, B5</p>
+
+    <button onclick="startListening()">🎙 Start Listening</button>
+
+    <p id="text">Idle</p>
+  </div>
+
+<script>
+  const ESP_IP = "http://10.204.94.75"; 
+
+  function normalizeCommand(text) {
+    text = text.toLowerCase();
+
+    const numbers = {
+      "one": "1","two": "2","three": "3","four": "4","five": "5",
+      "six": "6","seven": "7","eight": "8","nine": "9","ten": "10"
+    };
+
+    for (let word in numbers) {
+      text = text.replace(new RegExp(word, "g"), numbers[word]);
+    }
+
+    text = text.replace(/[^a-z0-9]/g, "");
+
+    return text;
+  }
+
+  function startListening() {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("❌ Use Google Chrome for voice control");
+      return;
+    }
+
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.start();
+    document.getElementById("text").innerText = "🎧 Listening...";
+
+    recognition.onresult = function(event) {
+      const spoken = event.results[0][0].transcript;
+      const cmd = normalizeCommand(spoken);
+
+      document.getElementById("text").innerText = cmd;
+      console.log("Recognized:", cmd);
+
+      fetch(`${ESP_IP}/cmd?q=${cmd}`, { mode: "cors" })
+        .then(res => {
+          if (!res.ok) throw new Error("ESP error");
+          console.log("Command sent:", cmd);
+        })
+        .catch(err => {
+          console.error(err);
+          alert("❌ ESP32 not reachable");
+        });
+    };
+
+    recognition.onerror = function(event) {
+      console.error("Speech error:", event.error);
+      alert("🎤 Mic error: " + event.error);
+    };
+  }
+</script>
+</body>
+</html>

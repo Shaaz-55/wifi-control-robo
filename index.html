@@ -1,128 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Voice Robot Control</title>
+  <meta charset="UTF-8">
+  <title>AI Voice Robot Controller</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
+    :root {
+      --primary: #00f2fe;
+      --secondary: #4facfe;
+      --accent: #ff00c1;
+      --bg-dark: rgba(15, 23, 42, 0.9);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-dim: #94a3b8;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       min-height: 100vh;
-      background-image: url('background.jpg'); 
-      background-repeat: no-repeat; 
-      background-size: cover; 
-      background-attachment: fixed; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(-45deg, #0f172a, #1e293b, #111827, #0f172a);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: white;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     .card {
-      background: rgba(0,0,0,0.75);
-      padding: 40px 30px;
-      border-radius: 20px;
-      text-align: center;
-      max-width: 400px;
       width: 90%;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      max-width: 450px;
+      background: var(--bg-dark);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 32px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
     }
 
-    h1 { color: #FFD700; margin-bottom: 10px; }
-    p { color: #f0f0f0; }
+    h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      background: linear-gradient(to right, #fff, var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-    button {
-      background: #FFD700;
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      margin-top: 10px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .command-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 30px 0;
+    }
+
+    .cmd-item {
+      font-size: 0.75rem;
+      padding: 6px;
+      background: rgba(0, 242, 254, 0.05);
+      border: 1px solid rgba(0, 242, 254, 0.1);
+      border-radius: 8px;
+      color: var(--primary);
+    }
+
+    .mic-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
       border: none;
-      padding: 15px 30px;
-      font-size: 18px;
-      border-radius: 10px;
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+      color: #00334e;
+      font-size: 1.8rem;
       cursor: pointer;
-      color: #000;
-      font-weight: bold;
       transition: all 0.3s ease;
+      box-shadow: 0 0 20px rgba(79, 172, 254, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
     }
 
-    button:hover {
-      background: #FFC300;
-      transform: scale(1.05);
+    .mic-btn:hover { transform: scale(1.1); }
+
+    .mic-btn.active {
+      background: var(--accent);
+      animation: pulse 1.5s infinite;
+      color: white;
     }
 
-    #text {
-      margin-top: 20px;
-      font-size: 22px;
-      color: #00FFCC;
-      min-height: 30px;
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 0, 193, 0.7); }
+      70% { box-shadow: 0 0 0 25px rgba(255, 0, 193, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 0, 193, 0); }
+    }
+
+    #transcript {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary);
+      height: 40px;
+      margin: 20px 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .toggle-container {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--primary);
     }
   </style>
 </head>
-
 <body>
+
   <div class="card">
-    <h1>🎤 Voice Robot Control</h1>
-    <p>Say: Forward, Backward, Left, Right, Stop, Auto, Manual, A1, B5</p>
+    <h1>Robot Voice AI</h1>
+    <div class="status-badge" id="status">System Ready</div>
 
-    <button onclick="startListening()">🎙 Start Listening</button>
+    <div class="command-grid">
+      <div class="cmd-item">Forward</div>
+      <div class="cmd-item">Backward</div>
+      <div class="cmd-item">Left</div>
+      <div class="cmd-item">Right</div>
+      <div class="cmd-item">Stop</div>
+      <div class="cmd-item">Manual</div>
+      <div class="cmd-item">Auto</div>
+      <div class="cmd-item">A1 - A9</div>
+      <div class="cmd-item">B1 - B9</div>
+    </div>
 
-    <p id="text">Idle</p>
+    <button id="micBtn" class="mic-btn" onclick="toggleListening()">🎙</button>
+    
+    <div id="transcript">Idle</div>
+
+    <div class="toggle-container">
+      <input type="checkbox" id="continuous"> 
+      <label for="continuous">Continuous Listening Mode</label>
+    </div>
   </div>
 
 <script>
-  const ESP_IP = "http://10.204.94.75"; 
+  const ESP_IP = "http://10.204.94.75";
+  const micBtn = document.getElementById("micBtn");
+  const transcriptDiv = document.getElementById("transcript");
+  const statusBadge = document.getElementById("status");
+  const contCheckbox = document.getElementById("continuous");
 
-  function normalizeCommand(text) {
-    text = text.toLowerCase();
+  let recognition;
+  let isListening = false;
 
-    const numbers = {
-      "one": "1","two": "2","three": "3","four": "4","five": "5",
-      "six": "6","seven": "7","eight": "8","nine": "9","ten": "10"
-    };
-
-    for (let word in numbers) {
-      text = text.replace(new RegExp(word, "g"), numbers[word]);
-    }
-
-    text = text.replace(/[^a-z0-9]/g, "");
-
-    return text;
-  }
-
-  function startListening() {
-    if (!('webkitSpeechRecognition' in window)) {
-      alert("❌ Use Google Chrome for voice control");
-      return;
-    }
-
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = "en-US";
+  // Initialize Speech API
+  if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 3; // Check multiple guesses for better quality
 
-    recognition.start();
-    document.getElementById("text").innerText = "🎧 Listening...";
+    // Add Grammar Weighting
+    if ('webkitSpeechGrammarList' in window) {
+      const commands = ['forward', 'backward', 'left', 'right', 'stop', 'auto', 'manual', 'a1', 'b5'];
+      const grammar = '#JSGF V1.0; grammar robot_cmd; public <command> = ' + commands.join(' | ') + ' ;';
+      const list = new webkitSpeechGrammarList();
+      list.addFromString(grammar, 1);
+      recognition.grammars = list;
+    }
 
-    recognition.onresult = function(event) {
-      const spoken = event.results[0][0].transcript;
-      const cmd = normalizeCommand(spoken);
-
-      document.getElementById("text").innerText = cmd;
-      console.log("Recognized:", cmd);
-
-      fetch(`${ESP_IP}/cmd?q=${cmd}`, { mode: "cors" })
-        .then(res => {
-          if (!res.ok) throw new Error("ESP error");
-          console.log("Command sent:", cmd);
-        })
-        .catch(err => {
-          console.error(err);
-          alert("❌ ESP32 not reachable");
-        });
+    recognition.onstart = () => {
+      isListening = true;
+      micBtn.classList.add("active");
+      statusBadge.innerText = "Listening...";
+      statusBadge.style.color = "var(--accent)";
     };
 
-    recognition.onerror = function(event) {
-      console.error("Speech error:", event.error);
-      alert("🎤 Mic error: " + event.error);
+    recognition.onresult = (event) => {
+      // Pick the best result based on confidence and fuzzy matching
+      let bestResult = event.results[0][0];
+      
+      // If first guess is weak, check alternatives
+      for (let i = 0; i < event.results[0].length; i++) {
+        if (event.results[0][i].confidence > 0.85) {
+          bestResult = event.results[0][i];
+          break;
+        }
+      }
+
+      const rawText = bestResult.transcript;
+      const cleanCmd = processText(rawText);
+      
+      transcriptDiv.innerText = cleanCmd;
+      sendCommand(cleanCmd);
     };
+
+    recognition.onend = () => {
+      isListening = false;
+      micBtn.classList.remove("active");
+      statusBadge.innerText = "System Ready";
+      statusBadge.style.color = "var(--text-dim)";
+      
+      // Restart automatically if Continuous is checked
+      if (contCheckbox.checked) {
+        recognition.start();
+      }
+    };
+
+    recognition.onerror = (e) => {
+      console.error("Speech Error: ", e.error);
+      isListening = false;
+      micBtn.classList.remove("active");
+    };
+  }
+
+  function processText(text) {
+    text = text.toLowerCase().trim();
+
+    // Fuzzy Logic Map for common misheard robot commands
+    const fuzzyMap = {
+      "for": "forward", "four": "forward", "ford": "forward", "go": "forward",
+      "back": "backward", "words": "forward",
+      "write": "right", "light": "right",
+      "star": "stop", "top": "stop", "shop": "stop", "stuck": "stop",
+      "auto": "auto", "manual": "manual",
+      "hey one": "a1", "ay one": "a1", "bee five": "b5", "be five": "b5"
+    };
+
+    // Replace written numbers (e.g., "five" -> "5")
+    const numMap = {"one":"1","two":"2","three":"3","four":"4","five":"5","six":"6","seven":"7","eight":"8","nine":"9"};
+    for (let key in numMap) text = text.replace(new RegExp(key, 'g'), numMap[key]);
+
+    // Check fuzzy map
+    for (let key in fuzzyMap) {
+      if (text.includes(key)) return fuzzyMap[key];
+    }
+
+    return text.replace(/[^a-z0-9]/g, "");
+  }
+
+  function toggleListening() {
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  }
+
+  function sendCommand(cmd) {
+    fetch(`${ESP_IP}/cmd?q=${cmd}`, { mode: "cors" })
+      .then(() => {
+        transcriptDiv.style.color = "var(--primary)";
+      })
+      .catch(() => {
+        transcriptDiv.innerText = "Offline";
+        transcriptDiv.style.color = "#ef4444";
+      });
   }
 </script>
 </body>

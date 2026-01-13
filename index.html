@@ -149,8 +149,10 @@
       <div class="cmd-item">Stop</div>
       <div class="cmd-item">Manual</div>
       <div class="cmd-item">Auto</div>
-      <div class="cmd-item">A1 - A9</div>
-      <div class="cmd-item">B1 - B9</div>
+      <div class="cmd-item">A1 - A2</div>
+      <div class="cmd-item">B1 - B2</div>
+      <div class="cmd-item">C1 - C2</div>
+      <div class="cmd-item">D1 - D2</div>
     </div>
 
     <button id="micBtn" class="mic-btn" onclick="toggleListening()">🎙</button>
@@ -164,7 +166,7 @@
   </div>
 
 <script>
-  const ESP_IP = "http://10.204.94.75";
+  const ESP_IP = "http://10.142.50.75";
   const micBtn = document.getElementById("micBtn");
   const transcriptDiv = document.getElementById("transcript");
   const statusBadge = document.getElementById("status");
